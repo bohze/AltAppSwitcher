@@ -110,6 +110,64 @@ int Modulo(int a, int b)
     return (a % b + b) % b;
 }
 
+static bool IsForegroundRoot(HWND targetRoot)
+{
+    const HWND foregroundWin = GetForegroundWindow();
+    if (!IsWindow(foregroundWin))
+        return false;
+
+    const HWND foregroundRoot = GetAncestor(foregroundWin, GA_ROOT);
+    if (foregroundRoot == targetRoot)
+        return true;
+
+    const HWND foregroundOwnerRoot = GetAncestor(foregroundWin, GA_ROOTOWNER);
+    return foregroundOwnerRoot == targetRoot;
+}
+
+bool ActivateSwitchTargetWindow(HWND targetWindow)
+{
+    if (!IsWindow(targetWindow))
+        return false;
+
+    HWND targetRoot = GetAncestor(targetWindow, GA_ROOT);
+    if (!IsWindow(targetRoot))
+        targetRoot = targetWindow;
+    if (!IsWindow(targetRoot))
+        return false;
+
+    const HWND foregroundWin = GetForegroundWindow();
+    const DWORD currentThread = GetCurrentThreadId();
+    const DWORD targetThread = GetWindowThreadProcessId(targetRoot, NULL);
+    const DWORD foregroundThread = foregroundWin ? GetWindowThreadProcessId(foregroundWin, NULL) : 0;
+    bool attachedTargetThread = false;
+    bool attachedForegroundThread = false;
+
+    if (targetThread != 0 && targetThread != currentThread)
+        attachedTargetThread = AttachThreadInput(currentThread, targetThread, TRUE) != 0;
+
+    if (foregroundThread != 0 && foregroundThread != currentThread && foregroundThread != targetThread)
+        attachedForegroundThread = AttachThreadInput(currentThread, foregroundThread, TRUE) != 0;
+
+    BringWindowToTop(targetRoot);
+    SetForegroundWindow(targetRoot);
+    SetActiveWindow(targetRoot);
+
+    bool success = IsForegroundRoot(targetRoot);
+    if (!success) {
+        BringWindowToTop(targetRoot);
+        SetActiveWindow(targetRoot);
+        SetForegroundWindow(targetRoot);
+        success = IsForegroundRoot(targetRoot);
+    }
+
+    if (attachedForegroundThread)
+        VERIFY(AttachThreadInput(currentThread, foregroundThread, FALSE) != 0);
+    if (attachedTargetThread)
+        VERIFY(AttachThreadInput(currentThread, targetThread, FALSE) != 0);
+
+    return success;
+}
+
 bool IsEligibleWindow(HWND hwnd, const struct Config* cfg, HMONITOR mouseMonitor, bool ignoreMinimizedWindows)
 {
     if (hwnd == GetShellWindow()) // Desktop

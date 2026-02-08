@@ -1099,12 +1099,9 @@ static void ApplySwitchApp(const SWinGroup* winGroup, bool restoreMinimized)
 {
     // Set focus for all win, not only the last one. This way when the active window is closed,
     // the second to last window of the group becomes the active one.
-    HWND fgWin = GetForegroundWindow();
     DWORD curThread = GetCurrentThreadId();
-    DWORD fgWinThread = GetWindowThreadProcessId(fgWin, NULL);
-    (void)curThread;
-    (void)fgWinThread;
     DWORD ret;
+    HWND targetWindow = NULL;
 
     int winCount = (int)winGroup->WindowCount;
 
@@ -1134,6 +1131,7 @@ static void ApplySwitchApp(const SWinGroup* winGroup, bool restoreMinimized)
         dwp = DeferWindowPos(dwp, win, prev, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
         VERIFY(dwp != 0);
         prev = win;
+        targetWindow = win;
     }
     ret = EndDeferWindowPos(dwp);
     VERIFY(ret != 0);
@@ -1155,6 +1153,9 @@ static void ApplySwitchApp(const SWinGroup* winGroup, bool restoreMinimized)
         ret = AttachThreadInput(targetWinThread, curThread, FALSE);
         (void)ret;
     }
+
+    if (targetWindow != NULL)
+        VERIFY(ActivateSwitchTargetWindow(targetWindow));
 }
 
 static void DrawRoundedRect(GpGraphics* pGraphics, GpPen* pPen, GpBrush* pBrush, const RectF* re, float di)

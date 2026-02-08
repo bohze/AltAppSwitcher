@@ -302,11 +302,7 @@ static void ApplyWin(void* windowDataVoidPtr)
     struct WindowData* windowData = windowDataVoidPtr;
     ASSERT(windowData);
     HWND win = windowData->CurrentWinGroup.Windows[windowData->Selection];
-    // DWORD targetWinThread = GetWindowThreadProcessId(win, NULL);
-    // AttachThreadInput(targetWinThread, GetCurrentThreadId(), TRUE);
-    // UIASetFocus(windowData->CurrentWinGroup.Windows[windowData->Selection]);
-    SetForegroundWindow(win);
-    // AttachThreadInput(targetWinThread, GetCurrentThreadId(), FALSE);
+    VERIFY(ActivateSwitchTargetWindow(win));
 }
 #define ASYNC
 

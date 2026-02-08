@@ -36,6 +36,7 @@ Run `RemoveFromStartup.bat` to revert this.
 The C runtime used by this project is not **MSVCRT** anymore. Please use **UCRT** version of llvm-mingw.
 
 This is a C project relying on C standard library and Windows API. I'm using [Clang (mingw ucrt)](https://github.com/mstorsjo/llvm-mingw) and VS Code / VS Codium.
+If your environment is missing build commands (`mingw32-make`, `x86_64-w64-mingw32-clang`, `clang-tidy`, `clang-format`), follow `BUILD_TOOLS_WINDOWS.md`.
 Here is my setup:
 ### Dependencies:
 - **Clang and Windows libraries:**\
